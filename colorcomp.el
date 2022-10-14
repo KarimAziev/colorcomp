@@ -273,7 +273,5 @@ The string is formatted #RRGGBB (hash followed by six hex digits)."
         (define-key m (kbd "RET") 'colorcomp-copy-as-kill-and-exit)
         m))
 
-;; Note that we never modify the data in each node, which is fixed when the ewoc is created to be either nil or an index into the vector colorcomp-data, the actual color components.
-
 (provide 'colorcomp)
 ;;; colorcomp.el ends here
