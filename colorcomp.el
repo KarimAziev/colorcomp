@@ -28,7 +28,9 @@
 
 ;; Color components display
 
-;; Here is a simple example using functions of the ewoc package to implement a color components display, an area in a buffer that represents a vector of three integers (itself representing a 24-bit RGB value) in various ways.
+;; A simple example using functions of the ewoc package to implement a color components display,
+;; an area in a buffer that represents a vector of three integers (itself
+;; representing a 24-bit RGB value) in various ways.
 
 ;;; Code:
 
@@ -123,7 +125,7 @@ If INDEX is nil, create text sample."
                      'face
                      `(foreground-color . ,current-color))
          "\n"))
-    (let ((cstr (apply 'format "#%02X%02X%02X"
+    (let ((cstr (apply #'format "#%02X%02X%02X"
                        (mapcar (lambda (i)
                                  (aref colorcomp-data i))
                                '(0 1 2))))
