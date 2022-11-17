@@ -33,6 +33,9 @@
 ;;; Code:
 
 (require 'ewoc)
+(require 'face-remap)
+
+(make-face 'colorcomp-remap-face)
 
 (defvar colorcomp-ewoc nil)
 (defvar colorcomp-labels ["[r]ed" "[g]reen" "[b]lue"])
@@ -40,7 +43,24 @@
   "A vector with RGB (red, green and blue) color levels.")
 
 (defvar colorcomp-mode-map nil)
-(defvar-local colorcomp-current-color nil)
+(defvar-local colorcomp-current-color 0)
+(defvar-local colorcomp-remap-cookies nil)
+
+(defun colorcomp-cleanup-face-remap ()
+  "Remove a face remappings `colorcomp-remap-cookies' in all buffers."
+  (when colorcomp-remap-cookies
+    (face-remap-remove-relative colorcomp-remap-cookies)
+    (setq colorcomp-remap-cookies nil)))
+
+(defun colorcomp-remap-face-buffer (&optional color)
+  "Add a face remapping with background COLOR to current buffer."
+  (colorcomp-cleanup-face-remap)
+  (when color
+    (set-face-attribute 'colorcomp-remap-face nil
+                        :background color)
+    (setq colorcomp-remap-cookies (face-remap-add-relative
+                                   'default
+                                   'colorcomp-remap-face))))
 
 (defun colorcomp-get-current-color ()
   "Format current color."
@@ -78,6 +98,7 @@ except that ] is never special and \ quotes ^, - or \ (but
 (defun colorcomp-pp (index)
   "Insert indicator of color's level in `colorcomp-data' at INDEX.
 If INDEX is nil, create text sample."
+  (colorcomp-remap-face-buffer (colorcomp-get-current-color))
   (if index
       (let* ((comp (aref colorcomp-data index))
              (title (aref colorcomp-labels index))
@@ -92,8 +113,7 @@ If INDEX is nil, create text sample."
          (if selected
              (propertize title
                          'face
-                         `(background-color .
-                                            ,(colorcomp-get-current-color)))
+                         'success)
            (progn (set-text-properties 0 (length title) nil title)
                   title))
          "\t: #x"
@@ -108,7 +128,8 @@ If INDEX is nil, create text sample."
                                  (aref colorcomp-data i))
                                '(0 1 2))))
           (samp " (sample text) "))
-      (insert "Color\t: "
+      (insert (format "Color\t: %s"
+                      (colorcomp-get-current-color))
               (propertize samp 'face
                           `(foreground-color . ,cstr))
               (propertize samp 'face
@@ -145,8 +166,7 @@ If INDEX is nil, create text sample."
 (defun colorcomp (color)
   "Allow fiddling with COLOR in a new buffer."
   (interactive (list (or (colorcomp-get-hex-color-at-point)
-                         (completing-read "Color (name or #RGB or #RRGGBB)"
-                                          (colorcomp-get-hex-color-at-point) ))))
+                         (read-color "Color (name or #RGB or #RRGGBB)" t))))
   (setq colorcomp-source-buffer (current-buffer))
   (when (string= "" color)
     (setq color "green"))
@@ -158,7 +178,7 @@ If INDEX is nil, create text sample."
    colorcomp-color-buffer)
   (kill-all-local-variables)
   (setq major-mode 'colorcomp-mode
-        mode-name "Color Components")
+        mode-name "Color")
   (use-local-map colorcomp-mode-map)
   (erase-buffer)
   (buffer-disable-undo)
@@ -166,16 +186,13 @@ If INDEX is nil, create text sample."
                                         (ash n -8))
                                       (color-values color))))
         (ewoc (ewoc-create 'colorcomp-pp
-                           "\nColor Components\n\n"
-                           "m - [m]ore
-                             l - [l]ess
-")))
+                           "\nColor\n\n")))
     (set (make-local-variable 'colorcomp-data) data)
     (set (make-local-variable 'colorcomp-ewoc) ewoc)
+    (ewoc-enter-last ewoc nil)
     (ewoc-enter-last ewoc 0)
     (ewoc-enter-last ewoc 1)
-    (ewoc-enter-last ewoc 2)
-    (ewoc-enter-last ewoc nil)))
+    (ewoc-enter-last ewoc 2)))
 
 (defun colorcomp-mod (index limit delta)
   "Add DELTA to the color level in `colorcomp-data' at INDEX.
@@ -196,6 +213,20 @@ LIMIT is max value."
   (colorcomp-mod index (if (> delta 0)
                            255 0)
                  delta))
+
+;;;###autoload
+(defun colorcomp-more (&optional _a)
+  "Increase currrent color level."
+  (interactive "p")
+  (colorcomp-update-level colorcomp-current-color 1))
+
+
+;;;###autoload
+(defun colorcomp-less (&optional _a)
+  "Decrease current color level."
+  (interactive "p")
+  (colorcomp-update-level colorcomp-current-color -1))
+
 
 ;;;###autoload
 (defun colorcomp-red-more (_a)
@@ -269,6 +300,10 @@ The string is formatted #RRGGBB (hash followed by six hex digits)."
                     (colorcomp-defrepeatable
                      '(("m" . colorcomp-green-more)
                        ("l" . colorcomp-green-less))))
+        (define-key m "+" 'colorcomp-more)
+        (define-key m "-" 'colorcomp-less)
+        (define-key m (kbd "<up>") 'colorcomp-more)
+        (define-key m (kbd "<down>") 'colorcomp-less)
         (define-key m " " 'colorcomp-copy-as-kill-and-exit)
         (define-key m (kbd "RET") 'colorcomp-copy-as-kill-and-exit)
         m))
