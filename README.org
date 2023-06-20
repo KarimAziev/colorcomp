@@ -30,12 +30,10 @@ Download the source code and put it wherever you like and add the directory to t
 *** With use-package and straight
 
 #+begin_src elisp :eval no
-
 (use-package colorcomp
-	:straight (colorcomp
-			       :repo "KarimAziev/colorcomp"
-			       :type git
-			       :host github))
-
+  :straight (colorcomp
+             :repo "KarimAziev/colorcomp"
+             :type git
+             :host github))
 #+end_src
 
