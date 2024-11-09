@@ -7,7 +7,7 @@
 ;; URL: https://github.com/KarimAziev/colorcomp
 ;; Version: 0.1.0
 ;; Keywords: lisp tools
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
