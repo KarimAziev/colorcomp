@@ -93,7 +93,7 @@ except that ] is never special and \ quotes ^, - or \ (but
 Optional argument CHARS is like the inside of a [...] in a regular expression
 except that ] is never special and \ quotes ^, - or \ (but
  not at the end of a range; quoting is never needed there)"
-  (when-let ((bounds (colorcomp-get-bounds-by-chars chars)))
+  (when-let* ((bounds (colorcomp-get-bounds-by-chars chars)))
     (buffer-substring-no-properties (car bounds)
                                     (cdr bounds))))
 
@@ -156,7 +156,7 @@ If INDEX is nil, create text sample."
 
 (defun colorcomp-get-hex-color-at-point ()
   "Return hex color at point or nil."
-  (when-let ((color
+  (when-let* ((color
               (colorcomp-word-by-chars "#[[:xdigit:]]")))
     (when (string-match-p "#[[:xdigit:]]\\{6\\}\\|#[[:xdigit:]]\\{3\\}" color)
       color)))
